@@ -1,0 +1,50 @@
+buildscript {
+    project.logger.lifecycle("groovy-logic.gradle: buildscript")
+
+    def manifestPlaceholders = [atakApiVersion: "com.atakmap.app@" + "5.4.0" + ".CIV"]
+
+    def getValueFromPropertiesFile = { propFile, key ->
+        if (!propFile.isFile() || !propFile.canRead())
+            return null
+        def prop = new Properties()
+        def reader = propFile.newReader()
+        try {
+            prop.load(reader)
+        } finally {
+            reader.close()
+        }
+        return prop.getProperty(key) // Using getProperty to ensure proper string casting
+    }
+
+    def getProperty = { name, defValue ->
+        def prop = null
+
+        if (project.hasProperty(name)) {
+            prop = project.property(name)
+        }
+
+        if (prop == null) {
+            prop = getValueFromPropertiesFile(project.rootProject.file('local.properties'), name)
+        }
+
+        return (prop != null) ? prop : defValue
+    }
+
+    ext.isDevKitEnabled = { ->
+        return getProperty('takrepo.url', null) != null
+    }
+
+    ext.set("PLUGIN_VERSION", "1.0")
+    ext.set("ATAK_VERSION", "5.4.0")
+
+    def urlKey = 'takrepo.url'
+
+    ext.takrepoUrl = getProperty(urlKey, 'https://localhost/')
+    ext.takrepoUser = getProperty('takrepo.user', 'invalid')
+    ext.takrepoPassword = getProperty('takrepo.password', 'invalid')
+    ext.takdevPlugin = getProperty('takdev.plugin', "${rootDir}/../../atak-gradle-takdev.jar")
+}
+
+
+
+
